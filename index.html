@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Nómina</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:#f5f6fa;color:#333;font-size:13px;}
+nav{background:#2178b4;display:flex;align-items:center;height:46px;padding:0 16px;}
+.nav-logo{display:flex;align-items:center;gap:10px;margin-right:24px;}
+.nav-logo-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;}
+.nav-logo-text{color:#fff;font-weight:700;font-size:16px;}
+nav .tab{color:rgba(255,255,255,0.85);padding:0 18px;height:46px;display:flex;align-items:center;cursor:pointer;font-size:14px;font-weight:600;border-bottom:3px solid transparent;}
+nav .tab.active{color:#fff;border-bottom:3px solid #fff;background:rgba(0,0,0,0.15);}
+nav .tab:hover{color:#fff;background:rgba(0,0,0,0.08);}
+.topbar{background:#fff;border-bottom:1px solid #e2e6ea;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.topbar .title h2{font-size:16px;font-weight:700;color:#1a1a2e;}
+.topbar .title span{font-size:11px;color:#8a94a6;display:block;margin-top:1px;}
+.btn-group{display:flex;gap:8px;}
+.btn-primary{background:#e8631a;color:#fff;border:none;padding:8px 18px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-secondary{background:#fff;color:#2178b4;border:1.5px solid #2178b4;padding:8px 18px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-clear{background:#fff;color:#e05252;border:1.5px solid #e05252;padding:8px 18px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-primary:hover{background:#d05710;}.btn-secondary:hover{background:#eef6ff;}.btn-clear:hover{background:#fff0f0;}
+.page{display:none;}.page.active{display:block;}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px;margin:20px auto;padding:0 20px;}
+@media(max-width:700px){.layout{grid-template-columns:1fr;}}
+.panel{background:#fff;border:1px solid #e2e6ea;border-radius:8px;padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+.panel-title{font-size:11.5px;font-weight:700;color:#2178b4;letter-spacing:.6px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #eef3f8;text-transform:uppercase;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:10.5px;font-weight:700;color:#6b7a8d;margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase;}
+.field input[type=text],.field input[type=number],.field input[type=date]{width:100%;padding:8px 10px;border:1px solid #d1d9e0;border-radius:5px;font-size:13px;background:#fff;color:#333;}
+.field input:focus{outline:none;border-color:#2178b4;box-shadow:0 0 0 3px rgba(33,120,180,0.1);}
+.input-prefix{display:flex;align-items:center;border:1px solid #d1d9e0;border-radius:5px;overflow:hidden;}
+.input-prefix:focus-within{border-color:#2178b4;box-shadow:0 0 0 3px rgba(33,120,180,0.1);}
+.input-prefix span{background:#f0f4f8;padding:8px 10px;color:#8a94a6;font-weight:700;font-size:13px;border-right:1px solid #d1d9e0;}
+.input-prefix input{border:none;padding:8px 10px;font-size:13px;flex:1;background:#fff;}
+.input-prefix input:focus{outline:none;box-shadow:none;}
+.toggle-group{display:flex;gap:6px;flex-wrap:wrap;}
+.toggle-btn{padding:5px 14px;border:1.5px solid #d1d9e0;border-radius:5px;background:#fff;color:#555;font-size:12px;cursor:pointer;font-weight:500;}
+.toggle-btn.active{background:#2178b4;color:#fff;border-color:#2178b4;}
+.toggle-btn.sm{padding:4px 10px;font-size:11px;}
+.hint{font-size:11px;color:#8a94a6;margin-top:4px;}
+.hint.blue{background:#eef6ff;color:#2178b4;padding:7px 11px;border-radius:5px;border-left:3px solid #2178b4;margin-top:8px;line-height:1.5;}
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.results-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;color:#a0aab4;font-size:13px;text-align:center;padding:20px;gap:10px;}
+.res-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f3f7;font-size:12.5px;}
+.res-row .lbl{color:#555;}.res-row .val{font-weight:600;color:#1a1a2e;}
+.res-row.neg .val{color:#e05252;}
+.res-row.total-row{padding-top:10px;margin-top:4px;border-top:2px solid #e2e6ea;border-bottom:none;}
+.res-row.total-row .lbl{font-weight:700;font-size:13px;color:#1a1a2e;}
+.res-row.neto .val{color:#27ae60;font-size:15px;font-weight:700;}
+.res-row.costo .val{color:#e8631a;font-size:15px;font-weight:700;}
+.res-tab-btns{display:flex;margin-bottom:16px;border-radius:6px;overflow:hidden;border:1.5px solid #2178b4;}
+.res-tab-btn{flex:1;padding:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:#fff;color:#2178b4;}
+.res-tab-btn.active{background:#2178b4;color:#fff;}
+.prestaciones-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.pres-card{background:#f7fbff;border:1px solid #cce3f5;border-radius:6px;padding:12px 14px;}
+.pres-card .pc-title{font-size:10px;color:#2178b4;font-weight:700;margin-bottom:6px;text-transform:uppercase;}
+.pres-card .pc-val{font-size:17px;font-weight:700;color:#1a1a2e;}
+.pres-card .pc-sub{font-size:10px;color:#8a94a6;margin-top:3px;}
+.desglose-title{font-size:11.5px;font-weight:700;color:#2178b4;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e6ea;text-transform:uppercase;}
+.desglose-total{background:#eef6ff;padding:9px 12px;border-radius:6px;margin-top:10px;display:flex;justify-content:space-between;}
+.desglose-total .lbl{font-weight:700;color:#2178b4;font-size:13px;}
+.desglose-total .val{font-weight:700;color:#2178b4;font-size:15px;}
+#incResumen{display:none;background:#f7fbff;border:1px solid #cce3f5;border-radius:6px;padding:12px 14px;margin-bottom:10px;}
+.section-label{font-size:10.5px;font-weight:700;color:#8a94a6;margin:12px 0 6px;letter-spacing:.5px;text-transform:uppercase;}
+.config-wrap{max-width:780px;margin:24px auto;padding:0 20px;}
+.config-panel{background:#fff;border:1px solid #e2e6ea;border-radius:8px;padding:24px 28px;margin-bottom:14px;}
+.config-title{font-size:12px;font-weight:700;color:#2178b4;letter-spacing:.5px;margin-bottom:16px;text-transform:uppercase;}
+.config-note{font-size:11.5px;color:#6b7a8d;margin-bottom:14px;line-height:1.6;}
+.param-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+.param-field label{font-size:10.5px;font-weight:700;color:#6b7a8d;display:block;margin-bottom:4px;text-transform:uppercase;}
+.inc-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f0f3f7;}
+.inc-row:last-child{border:none;}
+.inc-row .inc-label{font-size:13px;color:#333;}
+.inc-toggle{display:flex;border-radius:5px;overflow:hidden;border:1.5px solid #d1d9e0;}
+.inc-toggle button{padding:5px 14px;border:none;background:#fff;color:#555;font-size:12px;cursor:pointer;font-weight:500;}
+.inc-toggle button.active{background:#2178b4;color:#fff;}
+.arl-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.arl-table thead tr{background:#2178b4;color:#fff;}
+.arl-table th{padding:10px 14px;text-align:left;font-weight:600;font-size:12px;}
+.arl-table td{padding:9px 14px;border-bottom:1px solid #eef2f7;}
+.arl-table tr:last-child td{border:none;}
+.arl-table tr:nth-child(even) td{background:#f7fbff;}
+.arl-table .nivel-link{color:#2178b4;font-weight:600;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg width="32" height="32" viewBox="0 0 100 100" fill="none">
+        <rect width="100" height="100" rx="16" fill="#c8d400"/>
+        <rect x="18" y="18" width="52" height="48" rx="14" fill="white"/>
+        <path d="M33 47 Q44 58 57 47" stroke="#c8d400" stroke-width="5" stroke-linecap="round" fill="none"/>
+        <path d="M28 64 L38 66 L32 54" fill="white"/>
+        <circle cx="72" cy="28" r="14" fill="white" stroke="#c8d400" stroke-width="3"/>
+        <text x="68" y="33" font-size="14" font-weight="bold" fill="#c8d400">$</text>
+      </svg>
+    </div>
+    <span class="nav-logo-text">Calculadora de Nómina</span>
+  </div>
+  <div class="tab active" id="navPrincipal" onclick="goPage('principal')">Principal</div>
+  <div class="tab" id="navConfig" onclick="goPage('config')">Configuración</div>
+</nav>
+
+<!-- PRINCIPAL -->
+<div class="page active" id="pagePrincipal">
+  <div class="topbar">
+    <div class="title"><h2>Nómina Loggro</h2><span>Vigencia 2026 · Legislación laboral</span></div>
+    <div class="btn-group">
+      <button class="btn-primary" onclick="calcularNomina()">Calcular Nómina</button>
+      <button class="btn-secondary" onclick="calcularPrestaciones()">Calcular Prestaciones Sociales</button>
+      <button class="btn-clear" onclick="limpiarDatos()">🗑 Limpiar</button>
+    </div>
+  </div>
+  <div class="layout">
+    <div>
+      <!-- INFORMACIÓN SALARIAL -->
+      <div class="panel">
+        <div class="panel-title">Información Salarial</div>
+        <div class="field"><label>Salario Mensual</label><div class="input-prefix"><span>$</span><input type="text" id="salario" value="1.750.905" oninput="fmtInput(this)"></div></div>
+        <div class="field">
+          <label>Auxilio de Transporte</label>
+          <div class="toggle-group" id="auxGroup">
+            <button class="toggle-btn active" onclick="setAux(true,this)">Sí</button>
+            <button class="toggle-btn" onclick="setAux(false,this)">No</button>
+          </div>
+          <div class="hint" id="auxHint">Valor: $ 249.095 / mes</div>
+        </div>
+        <div class="field">
+          <label>Nivel de Riesgo ARL</label>
+          <div class="toggle-group" id="arlGroup">
+            <button class="toggle-btn sm active" onclick="setArl(0.522,this)">Nivel I · 0.522%</button>
+            <button class="toggle-btn sm" onclick="setArl(1.044,this)">Nivel II · 1.044%</button>
+            <button class="toggle-btn sm" onclick="setArl(2.436,this)">Nivel III · 2.436%</button>
+            <button class="toggle-btn sm" onclick="setArl(4.35,this)">Nivel IV · 4.35%</button>
+            <button class="toggle-btn sm" onclick="setArl(6.96,this)">Nivel V · 6.96%</button>
+          </div>
+          <div class="hint" id="arlHint">Riesgo mínimo</div>
+        </div>
+      </div>
+
+      <!-- PERÍODO -->
+      <div class="panel">
+        <div class="panel-title">Período de Nómina</div>
+        <div class="field date-row">
+          <div><label>Fecha Inicial Período</label><input type="date" id="periodoInicio"></div>
+          <div><label>Fecha Final Período</label><input type="date" id="periodoFin"></div>
+        </div>
+      </div>
+
+      <!-- HORAS EXTRAS -->
+      <div class="panel">
+        <div class="panel-title">Horas Extras y Recargos</div>
+        <div class="cols2" style="margin-bottom:8px;">
+          <div class="field"><label>Hora Extra Diurna (×1.25)</label><input type="number" id="heDiurna" value="0" min="0"></div>
+          <div class="field"><label>Hora Extra Nocturna (×1.75)</label><input type="number" id="heNocturna" value="0" min="0"></div>
+        </div>
+        <div class="cols2" style="margin-bottom:8px;">
+          <div class="field"><label>Recargo Nocturno (×0.35)</label><input type="number" id="recargoNocturno" value="0" min="0"></div>
+          <div class="field"><label>Hora Dominical / Festiva (×1.75)</label><input type="number" id="dominical" value="0" min="0"></div>
+        </div>
+        <div class="cols2">
+          <div class="field"><label>Extra Diurna Dom/Festiva (×2.00)</label><input type="number" id="heDomDiurna" value="0" min="0"></div>
+          <div class="field"><label>Extra Nocturna Dom/Festiva (×2.50)</label><input type="number" id="heDomNocturna" value="0" min="0"></div>
+        </div>
+      </div>
+
+      <!-- AUSENTISMOS -->
+      <div class="panel">
+        <div class="panel-title">Ausentismos No Remunerados</div>
+        <div class="cols2">
+          <div class="field"><label>Días (Nómina)</label><input type="number" id="ausNomina" value="0" min="0"><div class="hint">Afecta salario y auxilio del período</div></div>
+          <div class="field"><label>Días (Prestaciones)</label><input type="number" id="ausPrest" value="0" min="0"><div class="hint">Afecta cesantías, prima y vacaciones</div></div>
+        </div>
+      </div>
+
+      <!-- INCAPACIDADES -->
+      <div class="panel">
+        <div class="panel-title">Incapacidades</div>
+        <div class="cols2" style="margin-bottom:10px;">
+          <div class="field"><label>Fecha Inicial Incapacidad</label><input type="date" id="incFechaInicio" onchange="calcIncDias()"></div>
+          <div class="field"><label>Fecha Final Incapacidad</label><input type="date" id="incFechaFin" onchange="calcIncDias()"></div>
+        </div>
+        <div id="incResumen">
+          <div style="font-size:11px;font-weight:700;color:#2178b4;margin-bottom:8px;">DÍAS CALCULADOS</div>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;">
+            <div><span style="font-size:11px;color:#8a94a6;">Días 1–2</span><br><span id="inc1Display" style="font-weight:700;color:#1a1a2e;font-size:16px;">0</span><br><span class="hint" id="inc1Hint">100% del salario</span></div>
+            <div><span style="font-size:11px;color:#8a94a6;">Días 3–90</span><br><span id="inc2Display" style="font-weight:700;color:#1a1a2e;font-size:16px;">0</span><br><span class="hint" id="inc2Hint">66.67% del salario</span></div>
+            <div><span style="font-size:11px;color:#8a94a6;">Días 91+</span><br><span id="inc3Display" style="font-weight:700;color:#1a1a2e;font-size:16px;">0</span><br><span class="hint" id="inc3Hint">50% del salario</span></div>
+            <div><span style="font-size:11px;color:#8a94a6;">Total días</span><br><span id="incTotalDisplay" style="font-weight:700;color:#e8631a;font-size:16px;">0</span></div>
+          </div>
+        </div>
+        <div class="hint blue">Selecciona el rango de fechas de la incapacidad. Los días se distribuyen automáticamente por tramo según la ley.</div>
+      </div>
+
+      <!-- BONIFICACIONES -->
+      <div class="panel">
+        <div class="panel-title">Bonificaciones y Otros Ingresos</div>
+        <div class="cols2">
+          <div class="field"><label>Bonificación Salarial ($)</label><input type="text" id="bonoSalarial" value="0" oninput="fmtInput(this)"></div>
+          <div class="field"><label>Bonificación No Salarial ($)</label><input type="text" id="bonoNoSalarial" value="0" oninput="fmtInput(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div>
+      <div class="panel">
+        <div id="resultsPlaceholder" class="results-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2178b4" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M8 8h8M8 16h4"/></svg>
+          Completa los datos y presiona uno de los botones de cálculo para ver los resultados.
+        </div>
+        <div id="resultsContent" style="display:none;">
+          <div class="res-tab-btns">
+            <button class="res-tab-btn active" id="tabNomina" onclick="showTab('nomina')">Nómina</button>
+            <button class="res-tab-btn" id="tabPrest" onclick="showTab('prestaciones')">Prestaciones Sociales</button>
+          </div>
+
+          <!-- NÓMINA -->
+          <div id="tabNominaContent">
+            <div class="panel-title">Resumen de Nómina</div>
+            <div class="section-label">Devengado</div>
+            <div class="res-row"><span class="lbl" id="lbl_sal">Salario</span><span class="val" id="r_sal"></span></div>
+            <div class="res-row" id="row_aux" style="display:none"><span class="lbl" id="lbl_aux">Auxilio de transporte</span><span class="val" id="r_aux_r"></span></div>
+            <div class="res-row" id="row_ausente" style="display:none"><span class="lbl" id="lbl_ausente"></span><span class="val" style="color:#e05252;">$ 0</span></div>
+            <div class="res-row" id="row_he1" style="display:none"><span class="lbl" id="lbl_he1"></span><span class="val" id="r_he1"></span></div>
+            <div class="res-row" id="row_he2" style="display:none"><span class="lbl" id="lbl_he2"></span><span class="val" id="r_he2"></span></div>
+            <div class="res-row" id="row_he3" style="display:none"><span class="lbl" id="lbl_he3"></span><span class="val" id="r_he3"></span></div>
+            <div class="res-row" id="row_he4" style="display:none"><span class="lbl" id="lbl_he4"></span><span class="val" id="r_he4"></span></div>
+            <div class="res-row" id="row_he5" style="display:none"><span class="lbl" id="lbl_he5"></span><span class="val" id="r_he5"></span></div>
+            <div class="res-row" id="row_he6" style="display:none"><span class="lbl" id="lbl_he6"></span><span class="val" id="r_he6"></span></div>
+            <div class="res-row" id="row_inc1" style="display:none"><span class="lbl" id="lbl_inc1"></span><span class="val" id="r_inc1_r"></span></div>
+            <div class="res-row" id="row_inc2" style="display:none"><span class="lbl" id="lbl_inc2"></span><span class="val" id="r_inc2_r"></span></div>
+            <div class="res-row" id="row_inc3" style="display:none"><span class="lbl" id="lbl_inc3"></span><span class="val" id="r_inc3_r"></span></div>
+            <div class="res-row" id="row_bonoS" style="display:none"><span class="lbl">Bonificación salarial</span><span class="val" id="r_bonoS_r"></span></div>
+            <div class="res-row" id="row_bonoNS" style="display:none"><span class="lbl">Bonificación no salarial</span><span class="val" id="r_bonoNS_r"></span></div>
+            <div class="res-row total-row"><span class="lbl">Total devengado</span><span class="val" id="r_devengado_r"></span></div>
+
+            <div class="section-label" style="margin-top:14px;">Deducciones Empleado</div>
+            <div class="res-row neg"><span class="lbl">Salud (4%)</span><span class="val" id="r_salud_r"></span></div>
+            <div class="res-row neg"><span class="lbl">Pensión (4%)</span><span class="val" id="r_pension_r"></span></div>
+            <div class="res-row total-row neto"><span class="lbl">💵 Neto a pagar</span><span class="val" id="r_neto_r"></span></div>
+
+            <div class="section-label" style="margin-top:14px;">Aportes Empleador</div>
+            <div class="res-row"><span class="lbl">Salud (8.5%)</span><span class="val" id="r_saludempr_r"></span></div>
+            <div class="res-row"><span class="lbl">Pensión (12%)</span><span class="val" id="r_pensionempr_r"></span></div>
+            <div class="res-row"><span class="lbl" id="lbl_arl">ARL</span><span class="val" id="r_arl_r"></span></div>
+            <div class="res-row"><span class="lbl">Caja compensación (4%)</span><span class="val" id="r_caja_r"></span></div>
+            <div class="res-row"><span class="lbl">ICBF (3%)</span><span class="val" id="r_icbf_r"></span></div>
+            <div class="res-row"><span class="lbl">SENA (2%)</span><span class="val" id="r_sena_r"></span></div>
+            <div class="res-row total-row costo"><span class="lbl">💼 Costo total empleador</span><span class="val" id="r_costo_r"></span></div>
+          </div>
+
+          <!-- PRESTACIONES -->
+          <div id="tabPrestContent" style="display:none;">
+            <div class="panel-title">Prestaciones Sociales Causadas</div>
+            <div class="prestaciones-grid">
+              <div class="pres-card"><div class="pc-title">📦 Cesantías</div><div class="pc-val" id="p_ces"></div><div class="pc-sub">1 mes de salario por año</div></div>
+              <div class="pres-card"><div class="pc-title">📈 Int. Cesantías</div><div class="pc-val" id="p_int"></div><div class="pc-sub">1% sobre cesantías</div></div>
+              <div class="pres-card"><div class="pc-title">🎁 Prima</div><div class="pc-val" id="p_prima"></div><div class="pc-sub">15 días por semestre</div></div>
+              <div class="pres-card"><div class="pc-title">🏖️ Vacaciones</div><div class="pc-val" id="p_vac"></div><div class="pc-sub">15 días por año trabajado</div></div>
+            </div>
+            <div class="res-row total-row costo"><span class="lbl" style="font-weight:700;">Total prestaciones causadas</span><span class="val" id="p_total" style="color:#e8631a;font-size:15px;font-weight:700;"></span></div>
+            <div style="margin-top:18px;">
+              <div class="desglose-title">Desglose del Cálculo</div>
+              <div class="res-row"><span class="lbl">Salario mensual (<span id="d_diasPeriodo"></span> días)</span><span class="val" id="d_sal"></span></div>
+              <div class="res-row"><span class="lbl">Auxilio mensual base (<span id="d_diasAux"></span> días)</span><span class="val" id="d_aux"></span></div>
+              <div class="res-row"><span class="lbl">Días laborados</span><span class="val" style="font-weight:700;color:#1a1a2e;" id="d_diasTrab"></span></div>
+              <div class="res-row"><span class="lbl">Cesantías · (sal + aux + bonif) × días / 360</span><span class="val" id="d_ces"></span></div>
+              <div class="res-row"><span class="lbl">Intereses · cesantías × 1%</span><span class="val" id="d_int"></span></div>
+              <div class="res-row"><span class="lbl">Prima · (sal + aux + bonif) × días / 360</span><span class="val" id="d_prima"></span></div>
+              <div class="res-row"><span class="lbl">Vacaciones · (sal + bonif) / 30 × 1.25</span><span class="val" id="d_vac"></span></div>
+              <div class="desglose-total"><span class="lbl">Total prestaciones</span><span class="val" id="d_total"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div class="page" id="pageConfig">
+  <div class="topbar">
+    <div class="title"><h2>Nómina Loggro</h2><span>Configuración de parámetros · Vigencia 2026</span></div>
+  </div>
+  <div class="config-wrap">
+    <div class="config-panel">
+      <div class="config-title">Parámetros Legales 2026</div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Período de Nómina</label>
+        <div class="toggle-group" id="periodoGroup">
+          <button class="toggle-btn active" onclick="setPeriodo('mensual',this)">Mensual</button>
+          <button class="toggle-btn" onclick="setPeriodo('quincenal',this)">Quincenal</button>
+          <button class="toggle-btn" onclick="setPeriodo('decadal',this)">Decadal</button>
+        </div>
+      </div>
+      <div class="param-row">
+        <div class="param-field"><label>SMLMV</label><div class="input-prefix"><span>$</span><input type="text" id="cfg_smmlv" value="1.750.905" oninput="fmtInput(this)" onchange="syncConfig()"></div></div>
+        <div class="param-field"><label>Auxilio de Transporte</label><div class="input-prefix"><span>$</span><input type="text" id="cfg_aux" value="249.095" oninput="fmtInput(this)" onchange="syncConfig()"></div></div>
+        <div class="param-field"><label>Valor UVT</label><div class="input-prefix"><span>$</span><input type="text" id="cfg_uvt" value="52.374" oninput="fmtInput(this)"></div></div>
+      </div>
+    </div>
+    <div class="config-panel">
+      <div class="config-title">Porcentajes de Auxilio por Enfermedad Común</div>
+      <div class="config-note">Según art. 227 CST: días 1–2 mínimo legal (2/3 del salario), días 3–90 al 66.67%, días 91+ al 50%. Si la empresa paga el 100%, se usa el salario completo como base.</div>
+      <div class="inc-row">
+        <span class="inc-label">Días 1 a 2 de incapacidad</span>
+        <div class="inc-toggle" id="inc1Toggle">
+          <button onclick="setIncPct(0,0.6667,this,'66.67% del salario')">% Mínimo de ley</button>
+          <button class="active" onclick="setIncPct(0,1.0,this,'100% del salario')">100%</button>
+        </div>
+      </div>
+      <div class="inc-row">
+        <span class="inc-label">Días 3 a 90 de incapacidad</span>
+        <div class="inc-toggle" id="inc2Toggle">
+          <button class="active" onclick="setIncPct(1,0.6667,this,'66.67% del salario')">% Mínimo de ley</button>
+          <button onclick="setIncPct(1,1.0,this,'100% del salario')">100%</button>
+        </div>
+      </div>
+      <div class="inc-row">
+        <span class="inc-label">Días 91 en adelante</span>
+        <div class="inc-toggle" id="inc3Toggle">
+          <button class="active" onclick="setIncPct(2,0.5,this,'50% del salario')">% Mínimo de ley</button>
+          <button onclick="setIncPct(2,1.0,this,'100% del salario')">100%</button>
+        </div>
+      </div>
+    </div>
+    <div class="config-panel">
+      <div class="config-title">Tabla de Tarifas ARL (Referencia)</div>
+      <table class="arl-table">
+        <thead><tr><th>Nivel</th><th>Tasa</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td class="nivel-link">Nivel I</td><td>0.522%</td><td>Riesgo mínimo</td></tr>
+          <tr><td class="nivel-link">Nivel II</td><td>1.044%</td><td>Riesgo bajo</td></tr>
+          <tr><td class="nivel-link">Nivel III</td><td>2.436%</td><td>Riesgo medio</td></tr>
+          <tr><td class="nivel-link">Nivel IV</td><td>4.35%</td><td>Riesgo alto</td></tr>
+          <tr><td class="nivel-link">Nivel V</td><td>6.96%</td><td>Riesgo máximo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let auxActivo=true, arlPct=0.522, periodo='mensual';
+let incPct=[1.0,0.6667,0.5];
+let incHints=['100% del salario','66.67% del salario','50% del salario'];
+
+function fmt(n){ return '$ '+Math.round(n).toLocaleString('es-CO'); }
+
+function leerCampo(id){
+  const el=document.getElementById(id);
+  if(!el) return 0;
+  return parseFloat((el.value||'').replace(/\./g,'').replace(/,/g,'.'))||0;
+}
+
+function fmtInput(el){
+  const raw=el.value.replace(/\./g,'').replace(/\D/g,'');
+  const formatted=raw?parseInt(raw).toLocaleString('es-CO'):'';
+  el.value=formatted;
+  el.setSelectionRange(formatted.length,formatted.length);
+}
+
+function goPage(p){
+  document.getElementById('pagePrincipal').classList.toggle('active',p==='principal');
+  document.getElementById('pageConfig').classList.toggle('active',p==='config');
+  document.getElementById('navPrincipal').classList.toggle('active',p==='principal');
+  document.getElementById('navConfig').classList.toggle('active',p==='config');
+}
+
+function syncConfig(){
+  const aux=leerCampo('cfg_aux');
+  document.getElementById('auxHint').textContent=auxActivo?`Valor: $ ${Math.round(aux).toLocaleString('es-CO')} / mes`:'Sin auxilio de transporte';
+}
+
+function setPeriodo(p,btn){
+  periodo=p;
+  document.querySelectorAll('#periodoGroup .toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setIncPct(idx,val,btn,hint){
+  incPct[idx]=val; incHints[idx]=hint;
+  document.getElementById(['inc1Toggle','inc2Toggle','inc3Toggle'][idx]).querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(['inc1Hint','inc2Hint','inc3Hint'][idx]).textContent=hint;
+}
+
+function setAux(val,btn){
+  auxActivo=val;
+  document.querySelectorAll('#auxGroup .toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const aux=leerCampo('cfg_aux')||249095;
+  document.getElementById('auxHint').textContent=val?`Valor: $ ${Math.round(aux).toLocaleString('es-CO')} / mes`:'Sin auxilio de transporte';
+}
+
+const arlLabels=['Riesgo mínimo','Riesgo bajo','Riesgo medio','Riesgo alto','Riesgo máximo'];
+function setArl(pct,btn){
+  arlPct=pct;
+  document.querySelectorAll('#arlGroup .toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('arlHint').textContent=arlLabels[[0.522,1.044,2.436,4.35,6.96].indexOf(pct)]??'';
+}
+
+function calcIncDias(){
+  const fi=document.getElementById('incFechaInicio').value;
+  const ff=document.getElementById('incFechaFin').value;
+  if(!fi||!ff){document.getElementById('incResumen').style.display='none';return;}
+  const d1=new Date(fi),d2=new Date(ff);
+  if(d2<d1){document.getElementById('incResumen').style.display='none';return;}
+  const total=Math.round((d2-d1)/(864e5))+1;
+  const t1=Math.min(total,2),t2=Math.min(Math.max(total-2,0),88),t3=Math.max(total-90,0);
+  document.getElementById('inc1Display').textContent=t1;
+  document.getElementById('inc2Display').textContent=t2;
+  document.getElementById('inc3Display').textContent=t3;
+  document.getElementById('incTotalDisplay').textContent=total;
+  document.getElementById('inc1Hint').textContent=incHints[0];
+  document.getElementById('inc2Hint').textContent=incHints[1];
+  document.getElementById('inc3Hint').textContent=incHints[2];
+  document.getElementById('incResumen').style.display='block';
+}
+
+function getIncDias(){
+  return {
+    t1:parseInt(document.getElementById('inc1Display').textContent)||0,
+    t2:parseInt(document.getElementById('inc2Display').textContent)||0,
+    t3:parseInt(document.getElementById('inc3Display').textContent)||0
+  };
+}
+
+function setRow(rowId,lblId,valId,show,label,valor){
+  document.getElementById(rowId).style.display=show?'flex':'none';
+  if(show){
+    document.getElementById(lblId).textContent=label;
+    document.getElementById(valId).textContent=fmt(valor);
+  }
+}
+
+function showResults(){
+  document.getElementById('resultsPlaceholder').style.display='none';
+  document.getElementById('resultsContent').style.display='block';
+}
+
+function showTab(t){
+  document.getElementById('tabNominaContent').style.display=t==='nomina'?'block':'none';
+  document.getElementById('tabPrestContent').style.display=t==='prestaciones'?'block':'none';
+  document.getElementById('tabNomina').classList.toggle('active',t==='nomina');
+  document.getElementById('tabPrest').classList.toggle('active',t==='prestaciones');
+}
+
+function limpiarDatos(){
+  document.getElementById('salario').value='1.750.905';
+  document.getElementById('bonoSalarial').value='0';
+  document.getElementById('bonoNoSalarial').value='0';
+  ['ausNomina','ausPrest','heDiurna','heNocturna','recargoNocturno','dominical','heDomDiurna','heDomNocturna'].forEach(id=>document.getElementById(id).value='0');
+  ['periodoInicio','periodoFin','incFechaInicio','incFechaFin'].forEach(id=>document.getElementById(id).value='');
+  ['inc1Display','inc2Display','inc3Display'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('incTotalDisplay').textContent='0';
+  document.getElementById('incResumen').style.display='none';
+  auxActivo=true;
+  document.querySelectorAll('#auxGroup .toggle-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.getElementById('auxHint').textContent='Valor: $ 249.095 / mes';
+  arlPct=0.522;
+  document.querySelectorAll('#arlGroup .toggle-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  document.getElementById('arlHint').textContent='Riesgo mínimo';
+  document.getElementById('resultsPlaceholder').style.display='flex';
+  document.getElementById('resultsContent').style.display='none';
+}
+
+function calcularNomina(){
+  const SMMLV = leerCampo('cfg_smmlv')||1750905;
+  const AUX   = leerCampo('cfg_aux')||249095;
+  const sal   = leerCampo('salario');
+  const bonoS = leerCampo('bonoSalarial');
+  const bonoNS= leerCampo('bonoNoSalarial');
+  const ausN  = parseFloat(document.getElementById('ausNomina').value)||0;
+
+  const periodoInicioVal=document.getElementById('periodoInicio').value;
+  const diasPeriodo=periodo==='quincenal'?15:periodo==='decadal'?10:30;
+  const HORAS_MES=periodoInicioVal&&new Date(periodoInicioVal)>=new Date('2026-07-15')?210:220;
+
+  // Horas extras
+  const vh=sal/HORAS_MES;
+  const nHe1=parseFloat(document.getElementById('heDiurna').value)||0;
+  const nHe2=parseFloat(document.getElementById('heNocturna').value)||0;
+  const nHe3=parseFloat(document.getElementById('recargoNocturno').value)||0;
+  const nHe4=parseFloat(document.getElementById('dominical').value)||0;
+  const nHe5=parseFloat(document.getElementById('heDomDiurna').value)||0;
+  const nHe6=parseFloat(document.getElementById('heDomNocturna').value)||0;
+  const vHe1=nHe1*vh*1.25, vHe2=nHe2*vh*1.75, vHe3=nHe3*vh*0.35;
+  const vHe4=nHe4*vh*1.75, vHe5=nHe5*vh*2.0,  vHe6=nHe6*vh*2.5;
+  const he=vHe1+vHe2+vHe3+vHe4+vHe5+vHe6;
+
+  // Incapacidades
+  const {t1,t2,t3}=getIncDias();
+  const totalDiasInc=t1+t2+t3;
+  const salDia=sal/diasPeriodo;
+  const smmlvDia=SMMLV/30;
+  const inc1Val=t1*Math.max(salDia*incPct[0],smmlvDia);
+  const inc2Val=t2*Math.max(salDia*incPct[1],smmlvDia);
+  const inc3Val=t3*Math.max(salDia*incPct[2],smmlvDia);
+  const totalInc=inc1Val+inc2Val+inc3Val;
+
+  // Salario y auxilio ajustados
+  const diasSal=Math.max(0, diasPeriodo-ausN-totalDiasInc);
+  const salAjust=sal*diasSal/diasPeriodo;
+  const auxAjust=auxActivo?AUX*diasSal/diasPeriodo:0;
+
+  // Devengado
+  const devengado=salAjust+auxAjust+he+totalInc+bonoS+bonoNS;
+
+  // Deducciones empleado: salario + HE + bonos salariales + incapacidades (NO bonoNS)
+  const baseDedEmp=salAjust+he+bonoS+totalInc;
+  const saludEmp=baseDedEmp*0.04;
+  const pensionEmp=baseDedEmp*0.04;
+  const neto=devengado-saludEmp-pensionEmp;
+
+  // Aportes empleador
+  const saludEmpr=(sal+bonoS)*0.085;
+  const pensionEmpr=(sal+bonoS)*0.12;
+  const ibcParafiscal=salAjust+bonoS;
+  const arl=ibcParafiscal*(arlPct/100);
+  const caja=ibcParafiscal*0.04;
+  const icbf=ibcParafiscal*0.03;
+  const sena=ibcParafiscal*0.02;
+  const costo=devengado+saludEmpr+pensionEmpr+arl+caja+icbf+sena;
+
+  // Mostrar
+  document.getElementById('lbl_sal').textContent=`Salario (${diasSal} días)`;
+  document.getElementById('r_sal').textContent=fmt(salAjust);
+  document.getElementById('row_aux').style.display=auxActivo?'flex':'none';
+  document.getElementById('lbl_aux').textContent=`Auxilio de transporte (${diasSal} días)`;
+  document.getElementById('r_aux_r').textContent=fmt(auxAjust);
+  const rowAus=document.getElementById('row_ausente');
+  if(ausN>0){rowAus.style.display='flex';document.getElementById('lbl_ausente').textContent=`Ausentismo no remunerado (${ausN} días)`;}
+  else rowAus.style.display='none';
+  setRow('row_he1','lbl_he1','r_he1',nHe1>0,`Hora extra diurna (×1.25) (${nHe1} h)`,vHe1);
+  setRow('row_he2','lbl_he2','r_he2',nHe2>0,`Hora extra nocturna (×1.75) (${nHe2} h)`,vHe2);
+  setRow('row_he3','lbl_he3','r_he3',nHe3>0,`Recargo nocturno (×0.35) (${nHe3} h)`,vHe3);
+  setRow('row_he4','lbl_he4','r_he4',nHe4>0,`Hora dominical/festiva (×1.75) (${nHe4} h)`,vHe4);
+  setRow('row_he5','lbl_he5','r_he5',nHe5>0,`Extra diurna dom/festiva (×2.00) (${nHe5} h)`,vHe5);
+  setRow('row_he6','lbl_he6','r_he6',nHe6>0,`Extra nocturna dom/festiva (×2.50) (${nHe6} h)`,vHe6);
+  const pct1Str=incPct[0]===1?'100%':'66.67%';
+  const pct2Str=incPct[1]===1?'100%':'66.67%';
+  const pct3Str=incPct[2]===1?'100%':'50%';
+  setRow('row_inc1','lbl_inc1','r_inc1_r',t1>0,`Incapacidad Enfermedad General (${pct1Str}), ${t1} días`,inc1Val);
+  setRow('row_inc2','lbl_inc2','r_inc2_r',t2>0,`Incapacidad Enfermedad General (${pct2Str}), ${t2} días`,inc2Val);
+  setRow('row_inc3','lbl_inc3','r_inc3_r',t3>0,`Incapacidad Enfermedad General (${pct3Str}), ${t3} días`,inc3Val);
+  document.getElementById('row_bonoS').style.display=bonoS>0?'flex':'none';
+  document.getElementById('r_bonoS_r').textContent=fmt(bonoS);
+  document.getElementById('row_bonoNS').style.display=bonoNS>0?'flex':'none';
+  document.getElementById('r_bonoNS_r').textContent=fmt(bonoNS);
+  document.getElementById('r_devengado_r').textContent=fmt(devengado);
+  document.getElementById('r_salud_r').textContent='−'+fmt(saludEmp);
+  document.getElementById('r_pension_r').textContent='−'+fmt(pensionEmp);
+  document.getElementById('r_neto_r').textContent=fmt(neto);
+  document.getElementById('r_saludempr_r').textContent=fmt(saludEmpr);
+  document.getElementById('r_pensionempr_r').textContent=fmt(pensionEmpr);
+  document.getElementById('lbl_arl').textContent=`ARL (${arlPct}%)`;
+  document.getElementById('r_arl_r').textContent=fmt(arl);
+  document.getElementById('r_caja_r').textContent=fmt(caja);
+  document.getElementById('r_icbf_r').textContent=fmt(icbf);
+  document.getElementById('r_sena_r').textContent=fmt(sena);
+  document.getElementById('r_costo_r').textContent=fmt(costo);
+  showResults(); showTab('nomina');
+}
+
+function calcularPrestaciones(){
+  calcularNomina();
+  const AUX   = leerCampo('cfg_aux')||249095;
+  const sal   = leerCampo('salario');
+  const bonoS = leerCampo('bonoSalarial');
+  const ausN  = parseFloat(document.getElementById('ausNomina').value)||0;
+  const ausPres=parseFloat(document.getElementById('ausPrest').value)||0;
+  const diasPeriodo=periodo==='quincenal'?15:periodo==='decadal'?10:30;
+  const {t1,t2,t3}=getIncDias();
+  const totalDiasInc=t1+t2+t3;
+  const diasSal=Math.max(0,diasPeriodo-ausN-totalDiasInc);
+  const salAjust=sal*diasSal/diasPeriodo;
+  const auxCompleto=auxActivo?AUX:0;
+  const auxAjust=auxActivo?AUX*diasSal/diasPeriodo:0;
+
+  const fi=document.getElementById('periodoInicio').value;
+  const fc=document.getElementById('periodoFin').value;
+  let diasTrab=diasPeriodo;
+  if(fi&&fc){const d=Math.round((new Date(fc)-new Date(fi))/(864e5))+1;diasTrab=Math.max(0,d-ausPres);}
+
+  // Prestaciones (bonoNS NO hace base)
+  const ces  =(sal+auxCompleto+bonoS)*diasTrab/360;
+  const intC =ces*0.01;
+  const prima=(sal+auxAjust+bonoS)*diasTrab/360;
+  const vac  =(sal+bonoS)/30*1.25;
+  const total=ces+intC+prima+vac;
+
+  document.getElementById('p_ces').textContent=fmt(ces);
+  document.getElementById('p_int').textContent=fmt(intC);
+  document.getElementById('p_prima').textContent=fmt(prima);
+  document.getElementById('p_vac').textContent=fmt(vac);
+  document.getElementById('p_total').textContent=fmt(total);
+  document.getElementById('d_diasPeriodo').textContent=diasPeriodo;
+  document.getElementById('d_sal').textContent=fmt(salAjust);
+  document.getElementById('d_diasAux').textContent=diasSal;
+  document.getElementById('d_aux').textContent=fmt(auxAjust);
+  document.getElementById('d_diasTrab').textContent=diasTrab+' días';
+  document.getElementById('d_ces').textContent=fmt(ces);
+  document.getElementById('d_int').textContent=fmt(intC);
+  document.getElementById('d_prima').textContent=fmt(prima);
+  document.getElementById('d_vac').textContent=fmt(vac);
+  document.getElementById('d_total').textContent=fmt(total);
+  showResults(); showTab('prestaciones');
+}
+</script>
+</body>
+</html>
